@@ -1,0 +1,12 @@
+{
+  "name": "messenger_notifier",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "author": "dvk",
+  "license": "ISC",
+  "dependencies": {
+    "got": "^8.3.1",
+    "puppeteer": "^1.5.0"
+  }
+}
