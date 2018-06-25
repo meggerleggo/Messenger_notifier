@@ -16,3 +16,4 @@ data/*
 
 # Scripts
 pack.sh
+push.sh
