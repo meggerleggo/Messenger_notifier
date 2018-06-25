@@ -84,6 +84,17 @@ function handle_config_exists
     done
 }
 
+function check_node_modules
+{
+    local NODE_MODULES=$(ls | grep node_modules)
+
+    if [ "$NODE_MODULES" != "node_modules" ];
+
+    then        
+        npm update
+    fi
+}
+
 function check_structure 
 {
     for d in $(ls);
@@ -114,6 +125,8 @@ function check_structure
     
     return 0
 }
+
+check_node_modules
 
 check_structure
 
