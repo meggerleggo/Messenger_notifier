@@ -3,5 +3,5 @@ config/*
 data/*
 .vscode/*
 package-lock.json
-userinfo.json
-userinfo.json.old
+.userinfo.json
+.userinfo.json.old

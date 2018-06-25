@@ -1,8 +1,9 @@
 const puppeteer = require('puppeteer');
-const facebook = require('./facebook');
-const message = require('./message');
-const cache = require('./cache');
-const auth = require('./authentication');
+const facebook = require('./src/facebook');
+const message = require('./src/message');
+const cache = require('./src/cache');
+const auth = require('./src/authentication');
+const config = require('./src/configuration');
 
 const startupOptions = {
     headless: true,
@@ -26,8 +27,6 @@ async function navigatePage(page, url = String())
 
     if (loginRequired)
     {
-        console.log('Login required for ' + url);
-
         await auth.login(page, facebook.credentials.email, facebook.credentials.password);
 
         if (!url.endsWith('.com'))
@@ -35,62 +34,62 @@ async function navigatePage(page, url = String())
             await navigatePage(page, url);
         }
     }
-    
-    console.info('Page: ' + url + ' loaded');
+}
+
+async function runSetup()
+{
+    facebook.credentials = await config.loadFile('config/credentials.json');
+    let target = await config.loadFile('config/target.json');
+    message.setTarget(target.address);
+    cache.restore();
 }
 
 async function main()
-{
-    facebook.credentials.load('config/credentials.json');
+{    
+    await runSetup();
     
-    cache.userinfo.load('userinfo.json');
-
     let browser = await puppeteer.launch(startupOptions);
 
     let messengerPage = await browser.newPage();
     await navigatePage(messengerPage, facebook.url.MESSENGER);
-    
+
     let searchPage = await browser.newPage();
     await navigatePage(searchPage, facebook.url.HOME);
-    
+
     // let loginCookies = await messengerPage.cookies();    
     // await searchPage.setCookie(...loginCookies);
-    // console.log('cookies set');
-    
+        
     messengerPage.on('response', async (response) =>
     {        
         if (response.url().includes('/pull'))
-        {
-            // console.log('[Response received]');
-            // console.log('===================');
-            
+        {            
             let raw = await response.text();
-            
+
             let responseBody = JSON.parse(raw.substr(raw.indexOf('{')));
-            
+
             if (responseBody)
             {    
                 if (message.isValid(responseBody))
                 {
-                    console.log('Valid message!');
-
                     let senderId = message.extractSenderId(responseBody);           
                     let messageBody = message.extractMessageBody(responseBody);
 
-                    if (!cache.userinfo.current[senderId])
+                    if (!cache.getUser(senderId))
                     {
                         await navigatePage(searchPage, facebook.url.HOME + '/' + senderId);
-                        cache.userinfo.current[senderId] = await searchPage.title();
-                        cache.userinfo.save('userinfo.json');
+                        cache.setUser(senderId, await searchPage.title());
+                        cache.backup();
                     }
 
-                    let username = cache.userinfo.current[senderId];
+                    let username = cache.getUser(senderId);
 
-                    message.notifyReceived(username, messageBody);
+                    await message.notifyReceived(username, messageBody);
                 }
             }
         }
-    });    
+    });  
+
+    console.log('[READY]');
 }
 
 main();

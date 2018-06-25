@@ -1,8 +1,7 @@
 {
   "name": "messenger_notifier",
   "version": "1.0.0",
-  "description": "",
-  "main": "main.js",
+  "main": "messenger_notifier.js",
   "author": "dvk",
   "license": "ISC",
   "dependencies": {
