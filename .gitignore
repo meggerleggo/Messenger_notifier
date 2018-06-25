@@ -1,7 +1,19 @@
-node_modules/*
-config/*
-data/*
+# Dev utils
 .vscode/*
-package-lock.json
+
+# Node Modules
+node_modules/*
+
+# Config
+config/*
+
+# Research data
+data/*
+
+# Info json
 .userinfo.json
 .userinfo.json.old
+
+# Scripts
+pack.sh
+push.sh
