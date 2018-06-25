@@ -1,73 +1,64 @@
 const fs = require('fs');
 
-module.exports = 
+const userinfoPath = '.userinfo.json';
+const userinfoBackupPath = userinfoPath + '.old';
+
+let current = {};
+
+function getUser(id)
 {
+    return current[id];
+}
 
-    responses: [
-        {
-            url: String(),
-            body: String(), 
-            sender: String()
-        }
-    ],
-    
-    userinfo: {
+function setUser(id, username)
+{
+    current[id] = username;
+}
 
-        current: {},
-        
-        save(path = String())
-        {
-            if (fs.existsSync(path))
-            {
-                if (fs.existsSync(path + '.old'))
-                {
-                    fs.unlinkSync(path + '.old');
-                }
-                
-                fs.renameSync(path, path + '.old');
-            }
+function backup()
+{
+    if (!fs.existsSync(userinfoPath))
+    {
+        fs.writeFileSync(userinfoPath, JSON.stringify(current));
+        fs.copyFileSync(userinfoPath, userinfoBackupPath);
+        return;
+    }
 
-            fs.writeFileSync(path, JSON.stringify(this.current));
-        },
-
-        load(path = String())
-        {
-            if (!fs.existsSync(path))
-            {
-                console.log('Specified path does not exist');
-
-                if (fs.existsSync(path + '.old'))
-                {
-                    fs.renameSync(path + '.old', path);
-                }
-                else
-                {
-                    this.save(path);
-                }
-            }
-
-            let content = JSON.parse(fs.readFileSync(path)); 
-
-            if (content)
-            {
-                for (const key in content)
-                {
-                    this.current[key] = content[key];
-                }
-            }
-            else
-            {
-                throw "Could not load cache";
-            }
-        },
-
-        // DEBUG
-        logAll()
-        {
-            for (const key in this.current)
-            {
-                console.log(key + ':' + this.current[key]);
-            }
-        },
+    if (fs.existsSync(userinfoBackupPath))
+    {
+        fs.writeFileSync(userinfoPath, JSON.stringify(current));
+        fs.copyFileSync(userinfoPath, userinfoBackupPath);
+    }
+    else
+    {
+        fs.copyFileSync(userinfoPath, userinfoBackupPath);
+        fs.writeFileSync(userinfoPath, JSON.stringify(current));
     }
 }
+
+function restore()
+{
+    if (fs.existsSync(userinfoPath))
+    {
+        let userinfoString = fs.readFileSync(userinfoPath);
+
+        if (userinfoString)
+        {
+            current = JSON.parse(userinfoString);
+        }
+        else
+        {
+            fs.unlinkSync(userinfoPath);
+        }
+    }
+    else if (fs.existsSync(userinfoBackupPath))
+    {
+        fs.copyFileSync(userinfoBackupPath, userinfoPath);
+        restore();
+    }
+}
+
+module.exports.getUser = getUser;
+module.exports.setUser = setUser;
+module.exports.backup = backup;
+module.exports.restore = restore;
